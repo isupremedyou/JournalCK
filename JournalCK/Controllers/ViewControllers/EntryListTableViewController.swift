@@ -13,21 +13,19 @@ class EntryListTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        NotificationCenter.default.addObserver(self, selector: #selector(refresh), name: entriesWereSetNotificaiton.name, object: nil)
+        EntryController.shared.fetchEntriesFromCK { (success) in
+            if success {
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+            }
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         tableView.reloadData()
-    }
-    
-    @objc func refresh() {
-        
-        DispatchQueue.main.async {
-            
-            self.tableView.reloadData()
-        }
     }
     
     // MARK: - Table view data source
@@ -58,10 +56,8 @@ class EntryListTableViewController: UITableViewController {
             EntryController.shared.delete(withEntry: entry) { (success) in
                 if success {
                     DispatchQueue.main.async {
-                        tableView.deleteRows(at: [indexPath], with: .fade)
+                        tableView.deleteRows(at: [indexPath], with: .automatic)
                     }
-                } else {
-                    return
                 }
             }
         }

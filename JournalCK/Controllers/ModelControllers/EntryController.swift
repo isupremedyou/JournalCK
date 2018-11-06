@@ -9,35 +9,13 @@
 import Foundation
 import CloudKit
 
-let entriesWereSetNotificaiton = Notification(name: Notification.Name("entriesWereSet"))
-
 class EntryController {
     
     static let shared = EntryController()
     
     let cloudKitManager = CloudKitManager()
     
-    var entries = [Entry]() {
-        didSet {
-            NotificationCenter.default.post(entriesWereSetNotificaiton)
-        }
-    }
-    
-    init() {
-        cloudKitManager.fetchRecordsWith(type: Constants.entryTypeKey) { (records, error) in
-            if let error = error {
-                print("Error fetching records from CloudKit: \n\(#function)\n\(error)\n\(error.localizedDescription)")
-            } else {
-                guard let records = records else { return }
-                
-                for record in records {
-                    guard let entry = Entry(ckRecord: record) else { return }
-                    self.entries.append(entry)
-                }
-            }
-            
-        }
-    }
+    var entries = [Entry]()
     
     // MARK: - CRUD Functions
     
@@ -96,6 +74,25 @@ class EntryController {
                 return
             } else {
                 self.entries.remove(at: index)
+                completion(true)
+            }
+        }
+    }
+    
+    func fetchEntriesFromCK(completion: @escaping (Bool) -> Void) {
+        
+        cloudKitManager.fetchRecordsWith(type: Constants.entryTypeKey) { (records, error) in
+            if let error = error {
+                print("Error fetching records from CloudKit: \n\(#function)\n\(error)\n\(error.localizedDescription)")
+                completion(false)
+                return
+            } else {
+                guard let records = records else { return }
+                
+                for record in records {
+                    guard let entry = Entry(ckRecord: record) else { return }
+                    self.entries.append(entry)
+                }
                 completion(true)
             }
         }
